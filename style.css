@@ -49,6 +49,32 @@ body {
     transform: translateX(-50%);
   }
 }
+.announcement {
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(90deg, #5fa8ff, #6ee7b7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.announcement .text {
+  font-size: 0.8rem;
+  color: #0f172a;
+  font-weight: 300;
+  text-align: center;
+  width: 20rem;
+}
+.announcement .arrow {
+  border: none;
+  background: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #ffffff;
+  opacity: 0.7;
+  transition: 0.2s;
+}
+
 /* 
 =======================================
 MOBILE MENU
@@ -721,6 +747,349 @@ INTELLIGENCE
   border: none;
   border-radius: 8px;
   cursor: pointer;
+}
+
+/* 
+=======================================
+SECURITY
+==========================================
+*/
+.security {
+  padding: 5rem 1rem;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.security .container {
+  width: 100%;
+}
+.security .container h1 {
+  font-size: 2rem;
+  font-weight: 400;
+}
+.security .container .sub {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 300;
+}
+.security .container .slider {
+  margin-top: 3rem;
+  overflow: hidden;
+  position: relative;
+}
+.security .container .slider .track {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.5s ease;
+}
+.security .container .slider .card {
+  flex: 0 0 290px;
+  background: #f5f5f5;
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+.security .container .slider .card img {
+  width: 5rem;
+  margin-bottom: 1rem;
+}
+.security .container .slider .card h3 {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+.security .container .slider .card span {
+  font-size: 0.9rem;
+  color: #666;
+}
+.security .container .slider .card p {
+  margin-top: 1.5rem;
+  line-height: 1.4rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+.security .container .slider .controls {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 0.8rem;
+}
+.security .container .slider .controls button {
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  font-weight: lighter;
+}
+.security .container .slider .controls .progress {
+  width: 5rem;
+  height: 4px;
+  background: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+.security .container .slider .controls .progress .fill {
+  height: 100%;
+  width: 0%;
+  background: #22c55e;
+  transition: width 0.4s ease;
+}
+.security .container .cta {
+  margin-top: 2rem;
+  padding: 0.7rem 2rem;
+  background: #3ecf6e;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* 
+=======================================
+MEDIA — 
+==========================================
+*/
+.media {
+  padding: 5rem 1rem;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.media .container {
+  width: 100%;
+}
+.media .container h1 {
+  font-size: 2rem;
+  font-weight: 300;
+}
+.media .container .slider {
+  margin-top: 3rem;
+  overflow: hidden;
+}
+.media .container .slider .track {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.5s ease;
+}
+.media .container .slider .card {
+  flex: 0 0 300px;
+  background: #f5f5f5;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: left;
+  position: relative;
+}
+.media .container .slider .card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  border-radius: 10px 0 0 10px;
+}
+.media .container .slider .card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+.media .container .slider .card p {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.6;
+}
+.media .container .slider .card a {
+  display: inline-block;
+  margin-top: 1.5rem;
+  color: #22c55e;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.media .container .slider .c1::before {
+  background: #00d4ff;
+}
+.media .container .slider .c2::before {
+  background: #a855f7;
+}
+.media .container .slider .c3::before {
+  background: #22c55e;
+}
+.media .container .slider .c4::before {
+  background: #14b8a6;
+}
+.media .container .slider .c5::before {
+  background: #a855f7;
+}
+.media .container .slider .c6::before {
+  background: #22c55e;
+}
+.media .container .slider .controls {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 0.8rem;
+}
+.media .container .slider .controls button {
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  font-weight: lighter;
+}
+.media .container .slider .controls .progress {
+  width: 5rem;
+  height: 4px;
+  background: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+.media .container .slider .controls .progress .fill {
+  height: 100%;
+  width: 0%;
+  background: #22c55e;
+  transition: width 0.4s ease;
+}
+
+/* 
+=======================================
+SUMMARIES — 
+==========================================
+*/
+.mobile-summaries {
+  padding: 5rem 1rem;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.mobile-summaries .container {
+  width: 100%;
+}
+.mobile-summaries .container h1 {
+  font-size: 2rem;
+  font-weight: 400;
+}
+.mobile-summaries .container .sub {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 300;
+}
+.mobile-summaries .container .slider {
+  margin-top: 3rem;
+  overflow: hidden;
+  position: relative;
+}
+.mobile-summaries .container .slider .track {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.5s ease;
+}
+.mobile-summaries .container .slider .card {
+  flex: 0 0 100%;
+  border-radius: 16px;
+  text-align: start;
+}
+.mobile-summaries .container .slider .card img {
+  width: 100%;
+  height: 15rem;
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+}
+.mobile-summaries .container .slider .card h3 {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+.mobile-summaries .container .slider .card span {
+  font-size: 0.9rem;
+  color: #666;
+}
+.mobile-summaries .container .slider .card p {
+  margin-top: 1.5rem;
+  line-height: 1.4rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+.mobile-summaries .container .slider .controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+}
+.mobile-summaries .container .slider .controls .controller {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.mobile-summaries .container .slider .controls button {
+  background: #22c55e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  height: 2rem;
+  width: 2rem;
+  border-radius: 8px;
+  color: #000;
+  font-size: 1.2rem;
+}
+.mobile-summaries .container .slider .controls .dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mobile-summaries .container .slider .controls .dots span {
+  width: 6px;
+  height: 6px;
+  background: #999;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.mobile-summaries .container .slider .controls .dots span.active {
+  width: 10rem;
+  height: 4px;
+  border-radius: 10px;
+  background: #ddd;
+}
+.mobile-summaries .container .slider .controls .dots span.active .progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: #22c55e;
+}
+.mobile-summaries .container .slider .controls .progress {
+  flex: 1;
+  height: 4px;
+  background: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.mobile-summaries .container .slider .controls .progress .fill {
+  height: 100%;
+  width: 0%;
+  background: #22c55e;
+  transition: none;
+}
+.mobile-summaries .container .cta {
+  margin-top: 2rem;
+  padding: 0.7rem 2rem;
+  background: #3ecf6e;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.summaries {
+  display: none;
 }
 
 /* 
@@ -1541,6 +1910,208 @@ DESKTOP  ≥ 1024px
   }
   .intelligence .container .grid .card-5 {
     grid-area: e;
+  }
+  /* SECURITY */
+  .security {
+    padding: 5rem 1rem;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .security .container {
+    width: 80%;
+  }
+  .security .container h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+  }
+  .security .container .sub {
+    margin-top: 1.5rem;
+    font-size: 1.2rem;
+    color: #666;
+  }
+  .security .container .slider {
+    margin-top: 3rem;
+    overflow: hidden;
+    position: relative;
+  }
+  .security .container .slider .track {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.5s ease;
+  }
+  .security .container .slider .card {
+    flex: 0 0 280px;
+    background: #f5f5f5;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+  .security .container .slider .card img {
+    width: 9rem;
+    margin-bottom: 1rem;
+  }
+  .security .container .slider .card h3 {
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+  .security .container .slider .card span {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .security .container .slider .card p {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  .security .container .slider .controls {
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .security .container .slider .controls button {
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  .security .container .slider .controls .progress {
+    width: 10rem;
+    height: 4px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .security .container .slider .controls .progress .fill {
+    height: 100%;
+    width: 0%;
+    background: #22c55e;
+    transition: width 0.4s ease;
+  }
+  .security .container .cta {
+    margin-top: 2rem;
+    padding: 0.7rem 2rem;
+    background: #22c55e;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  /* SUMMARIES */
+  .mobile-summaries {
+    display: none;
+  }
+  .summaries {
+    padding: 5rem 1rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .summaries .container {
+    width: 90%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    min-height: 30rem;
+  }
+  .summaries .container h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+  }
+  .summaries .container .sub {
+    font-size: 1.2rem;
+    font-weight: 300;
+    margin-top: 2rem;
+  }
+  .summaries .container .wrapper {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    margin-top: 4rem;
+  }
+  .summaries .container .wrapper .left {
+    flex: 1;
+  }
+  .summaries .container .wrapper .left .img {
+    display: none;
+    width: 100%;
+    height: 25rem;
+    border-radius: 16px;
+  }
+  .summaries .container .wrapper .left .img.active {
+    display: block;
+  }
+  .summaries .container .wrapper .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .summaries .container .wrapper .right .item {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+    opacity: 0.4;
+    transition: 0.3s;
+  }
+  .summaries .container .wrapper .right .item .progress {
+    width: 4px;
+    background: #ddd;
+    position: relative;
+    align-self: stretch;
+  }
+  .summaries .container .wrapper .right .item .progress span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: #22c55e;
+  }
+  .summaries .container .wrapper .right .item .info {
+    display: flex;
+    gap: 0.2rem;
+    flex-direction: column;
+  }
+  .summaries .container .wrapper .right .item h4 {
+    font-size: 1rem;
+    color: #3b82f6;
+  }
+  .summaries .container .wrapper .right .item .short {
+    font-size: 1.5rem;
+    font-weight: 300;
+  }
+  .summaries .container .wrapper .right .item .full {
+    margin-top: 1rem;
+    line-height: 1.4rem;
+    font-size: 1rem;
+    color: #555;
+    display: none;
+  }
+  .summaries .container .wrapper .right .item.active {
+    opacity: 1;
+  }
+  .summaries .container .wrapper .right .item.active .full {
+    display: block;
+  }
+  .summaries .container .controls {
+    display: none;
+  }
+  /* MEDIA */
+  .media .container {
+    width: 80%;
+  }
+  .media .container h1 {
+    font-size: 2.5rem;
+  }
+  .media .container .slider {
+    margin-top: 4rem;
+  }
+  .media .container .slider .controls .progress {
+    width: 10rem;
   }
   /* ─────────────────────────────────────
      FOOTER

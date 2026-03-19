@@ -376,7 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-
+    // ====================== SUMMARIES ================================
 
     const section = document.querySelector(".summaries");
 
@@ -433,20 +433,24 @@ document.addEventListener("DOMContentLoaded", () => {
         autoPlay();
     }
 
-  const mobile_summaries = document.querySelector(".mobile-summaries");
+    // ====================== MOBILE SUMMARIES ==========================
+
+const mobile_summaries = document.querySelector(".mobile-summaries");
 
 if (mobile_summaries) {
     const track = mobile_summaries.querySelector(".track");
     const cards = mobile_summaries.querySelectorAll(".card");
     const next = mobile_summaries.querySelector(".next");
     const prev = mobile_summaries.querySelector(".prev");
+    const pauseBtn = mobile_summaries.querySelector(".pause"); // 🔥 add
     const dotsWrap = mobile_summaries.querySelector(".dots");
 
     let index = 0;
     const duration = 4000;
     let interval;
+    let isPaused = false; // 🔥 state
 
-    // 🔥 CREATE DOTS (with inner progress)
+    // DOTS
     cards.forEach((_, i) => {
         const dot = document.createElement("span");
 
@@ -489,6 +493,8 @@ if (mobile_summaries) {
     }
 
     function autoPlay() {
+        if (isPaused) return; // 🔥 STOP if paused
+
         startProgress();
 
         interval = setTimeout(() => {
@@ -500,23 +506,44 @@ if (mobile_summaries) {
 
     function restart() {
         clearTimeout(interval);
-        autoPlay();
+        if (!isPaused) autoPlay();
     }
 
-    // buttons
+    // NEXT
     next.onclick = () => {
         index = (index + 1) % cards.length;
         updateSlider();
         restart();
     };
 
+    // PREV
     prev.onclick = () => {
         index = (index - 1 + cards.length) % cards.length;
         updateSlider();
         restart();
     };
 
-    // dot click
+    // 🔥 PAUSE BUTTON
+    pauseBtn?.addEventListener("click", () => {
+        isPaused = !isPaused;
+
+        if (isPaused) {
+            clearTimeout(interval);
+
+            // stop animation instantly
+            const bar = dots[index].querySelector(".progress");
+            const computedWidth = getComputedStyle(bar).width;
+            bar.style.transition = "none";
+            bar.style.width = computedWidth;
+
+            pauseBtn.textContent = "▶"; // play icon
+        } else {
+            pauseBtn.textContent = "||";
+            autoPlay();
+        }
+    });
+
+    // DOT CLICK
     dots.forEach((dot, i) => {
         dot.addEventListener("click", () => {
             index = i;
@@ -528,5 +555,4 @@ if (mobile_summaries) {
     updateSlider();
     autoPlay();
 }
-
 });

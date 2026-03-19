@@ -1053,7 +1053,7 @@ SUMMARIES —
   overflow: hidden;
 }
 .mobile-summaries .container .slider .controls .dots span.active {
-  width: 10rem;
+  width: 8rem;
   height: 4px;
   border-radius: 10px;
   background: #ddd;
@@ -1065,19 +1065,6 @@ SUMMARIES —
   height: 100%;
   width: 0%;
   background: #22c55e;
-}
-.mobile-summaries .container .slider .controls .progress {
-  flex: 1;
-  height: 4px;
-  background: #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-}
-.mobile-summaries .container .slider .controls .progress .fill {
-  height: 100%;
-  width: 0%;
-  background: #22c55e;
-  transition: none;
 }
 .mobile-summaries .container .cta {
   margin-top: 2rem;

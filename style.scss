@@ -1243,7 +1243,7 @@ SUMMARIES —
                         overflow: hidden;
 
                         &.active {
-                            width: 10rem; // 🔥 becomes bar
+                            width: 8rem; // 🔥 becomes bar
                             height: 4px;
                             border-radius: 10px;
                             background: #ddd;
@@ -1260,20 +1260,6 @@ SUMMARIES —
                     }
                 }
 
-                .progress {
-                    flex: 1;
-                    height: 4px;
-                    background: #ddd;
-                    border-radius: 10px;
-                    overflow: hidden;
-
-                    .fill {
-                        height: 100%;
-                        width: 0%;
-                        background: #22c55e;
-                        transition: none; // important
-                    }
-                }
             }
         }
 

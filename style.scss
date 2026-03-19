@@ -341,7 +341,7 @@ SLIDER
 
     .container {
         position: relative;
-        height: 80vh;
+        height: 70vh;
         overflow: hidden;
         border-radius: 10px;
 
@@ -1844,6 +1844,7 @@ DESKTOP  ≥ 1024px
         padding: 0 2rem 0 2rem;
 
         .container {
+            height: 85vh;
             .slider {
                 .slide {
                     align-items: center;
@@ -2440,7 +2441,8 @@ DESKTOP  ≥ 1024px
                         transition: 0.3s;
 
                         .progress {
-                            width: 4px;
+                            width: 2px;
+                            flex-shrink: 0;
                             background: #ddd;
                             position: relative;
                             align-self: stretch; // 🔥 auto height based on content

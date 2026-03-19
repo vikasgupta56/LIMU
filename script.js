@@ -43,12 +43,12 @@ document.addEventListener("DOMContentLoaded", () => {
         let heroIndex = 0;
         let startX = 0;
         let isDragging = false;
-        let interval;
+        let interval = null;
 
+        // ── slide logic ──────────────────────────────────────────────────
         function showSlide(i) {
             slides.forEach(s => s.classList.remove("active"));
             bars.forEach(b => b.classList.remove("active"));
-
             slides[i].classList.add("active");
             bars[i].classList.add("active");
         }
@@ -63,76 +63,85 @@ document.addEventListener("DOMContentLoaded", () => {
             showSlide(heroIndex);
         }
 
-        // 🔥 AUTO SLIDE FUNCTION
+        // ── autoplay ─────────────────────────────────────────────────────
+        // FIX 2: always clear the existing interval before starting a new one
+        //        so we never accidentally stack two running intervals
         function startAutoSlide() {
-            interval = setInterval(() => {
-                nextSlide();
-            }, 3000); // 3 sec
+            clearInterval(interval);           // no-op if already null — safe
+            interval = setInterval(nextSlide, 5000);
         }
 
         function stopAutoSlide() {
             clearInterval(interval);
+            interval = null;
         }
 
-        // ✅ Start auto
         startAutoSlide();
 
-        // ✅ Buttons
+        // ── arrow buttons ────────────────────────────────────────────────
         next?.addEventListener("click", () => {
             nextSlide();
-            stopAutoSlide();
-            startAutoSlide(); // reset timer
+            startAutoSlide();    // resets the 3 s countdown
         });
 
         prev?.addEventListener("click", () => {
             prevSlide();
-            stopAutoSlide();
             startAutoSlide();
         });
 
-        // ✅ Mouse drag
-        hero.addEventListener("mousedown", (e) => {
+        // ── mouse drag ───────────────────────────────────────────────────
+        hero.addEventListener("mousedown", e => {
             isDragging = true;
             startX = e.clientX;
             stopAutoSlide();
         });
 
-        hero.addEventListener("mouseup", (e) => {
+        hero.addEventListener("mouseup", e => {
             if (!isDragging) return;
-
             const diff = e.clientX - startX;
-
             if (diff > 50) prevSlide();
             else if (diff < -50) nextSlide();
-
             isDragging = false;
             startAutoSlide();
         });
 
-        // ✅ Touch swipe
-        hero.addEventListener("touchstart", (e) => {
+        // safety: if the mouse leaves while button is held, end the drag cleanly
+        hero.addEventListener("mouseleave", () => {
+            if (isDragging) {
+                isDragging = false;
+                startAutoSlide();
+            }
+        });
+
+        // ── hover pause ──────────────────────────────────────────────────
+        // FIX 1: guard with isDragging so hover events during a drag gesture
+        //        don't restart/stop the timer on top of the drag handlers
+        hero.addEventListener("mouseenter", () => {
+            if (!isDragging) stopAutoSlide();
+        });
+
+        // mouseleave is already handled above for the drag case;
+        // this covers the normal hover-exit path
+        hero.addEventListener("mouseleave", () => {
+            if (!isDragging) startAutoSlide();
+        });
+
+        // ── touch swipe ──────────────────────────────────────────────────
+        hero.addEventListener("touchstart", e => {
             startX = e.touches[0].clientX;
             stopAutoSlide();
         });
 
-        hero.addEventListener("touchend", (e) => {
+        hero.addEventListener("touchend", e => {
             const diff = e.changedTouches[0].clientX - startX;
-
             if (diff > 50) prevSlide();
             else if (diff < -50) nextSlide();
-
             startAutoSlide();
         });
-
-        // 🔥 BONUS: hover pe pause
-        hero.addEventListener("mouseenter", stopAutoSlide);
-        hero.addEventListener("mouseleave", startAutoSlide);
-
     });
 
 
     // ================= WORK SLIDER =================
-    // FIX 1: Scope every query inside .work — stops grabbing the marquee .track
     const workSection = document.querySelector(".work");
 
     if (workSection) {
@@ -142,27 +151,43 @@ document.addEventListener("DOMContentLoaded", () => {
         const prevBtn = workSection.querySelector(".prev");
         const fill = workSection.querySelector(".fill");
 
-        let workIndex = 0;   // FIX 2: renamed — was re-declaring 'index' at the same scope level
+        let workIndex = 0;
+
+        // FIX 2: read width from a NON-expanded card so an open card never
+        //        pollutes the measurement. We look for the first card that
+        //        does NOT have the "active" class; fall back to cards[0].
+        function getCardWidth() {
+            const reference = Array.from(cards).find(c => !c.classList.contains("active")) || cards[0];
+            const gap = parseInt(getComputedStyle(track).gap) || 20;
+            return reference.offsetWidth + gap;
+        }
+
+        function getMaxIndex() {
+            const cardWidth = getCardWidth();
+            const containerWidth = track.parentElement.offsetWidth;
+            const visibleCards = Math.max(1, Math.floor(containerWidth / cardWidth));
+            return Math.max(0, cards.length - visibleCards);
+        }
 
         function updateSlider() {
             if (!cards.length || !track) return;
 
-            // FIX 3: read the gap from CSS so it's always accurate
-            const gap = parseInt(getComputedStyle(track).gap) || 20;
-            const cardWidth = cards[0].offsetWidth + gap;
+            const maxIndex = getMaxIndex();
 
+            // clamp workIndex to valid range
+            workIndex = Math.min(Math.max(workIndex, 0), maxIndex);
+
+            const cardWidth = getCardWidth();
             track.style.transform = `translateX(-${workIndex * cardWidth}px)`;
 
             if (fill) {
-                const progress = cards.length > 1
-                    ? (workIndex / (cards.length - 1)) * 100
-                    : 0;
-                fill.style.width = progress + "%";
+                fill.style.width = (maxIndex > 0 ? (workIndex / maxIndex) * 100 : 0) + "%";
             }
         }
 
+        // FIX 1: guard against the real upper limit (maxIndex), NOT cards.length - 1
         nextBtn?.addEventListener("click", () => {
-            if (workIndex < cards.length - 1) {
+            if (workIndex < getMaxIndex()) {
                 workIndex++;
                 updateSlider();
             }
@@ -175,20 +200,25 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        // ================= EXPAND / CLOSE CARDS =================
+        // ── Expand / Close cards ─────────────────────────────────────────
         cards.forEach(card => {
-            const expandBtn = card.querySelector(".expand");
-            const closeBtn = card.querySelector(".close");
-
-            expandBtn?.addEventListener("click", () => {
+            card.querySelector(".expand")?.addEventListener("click", () => {
                 cards.forEach(c => c.classList.remove("active"));
                 card.classList.add("active");
+                // FIX 2 continued: recalculate after expand because the active
+                //                  card's size has changed
+                updateSlider();
             });
 
-            closeBtn?.addEventListener("click", () => {
+            card.querySelector(".close")?.addEventListener("click", () => {
                 card.classList.remove("active");
+                // Recalculate after collapse too
+                updateSlider();
             });
         });
+
+        // FIX 3: recalculate on resize so visibleCards stays accurate
+        window.addEventListener("resize", updateSlider);
     }
 
 
@@ -234,65 +264,121 @@ document.addEventListener("DOMContentLoaded", () => {
         menu.classList.remove("active");
     });
 
-    // ====================== SECURITY ================================
-
+    // ================= SECURITY SLIDER =================
     const sec = document.querySelector(".security");
 
     if (sec) {
         const track = sec.querySelector(".track");
         const cards = sec.querySelectorAll(".card");
-        const next = sec.querySelector(".next");
-        const prev = sec.querySelector(".prev");
+        const nextBtn = sec.querySelector(".next");
+        const prevBtn = sec.querySelector(".prev");
         const fill = sec.querySelector(".fill");
 
-        let index = 0;
-        let interval;
+        // FIX 1: renamed from 'index' — avoids clash with any other 'let index'
+        //        declared in the same DOMContentLoaded scope
+        let secIndex = 0;
+        let autoTimer = null;
 
-        function updateSlider() {
-            const gap = 20;
-            const width = cards[0].offsetWidth + gap;
-
-            track.style.transform = `translateX(-${index * width}px)`;
-
-            const progress = (index / (cards.length - 1)) * 100;
-            fill.style.width = progress + "%";
+        // ── helpers ──────────────────────────────────────────────────────
+        function getCardWidth() {
+            const gap = parseInt(getComputedStyle(track).gap) || 20;
+            return cards[0].offsetWidth + gap;
         }
 
-        // 🔥 AUTO SLIDE
+        function getMaxIndex() {
+            const containerWidth = track.parentElement.offsetWidth;
+            // FIX 2: compute max in one pass — no repeated DOM reads
+            const visibleCards = Math.max(1, Math.floor(containerWidth / getCardWidth()));
+            return Math.max(0, cards.length - visibleCards);
+        }
+
+        function clamp(val) {
+            return Math.min(Math.max(val, 0), getMaxIndex());
+        }
+
+        function updateSlider() {
+            if (!cards.length || !track) return;
+
+            // FIX 3: clamp before reading maxIndex so fill never flashes to 100%
+            const maxIndex = getMaxIndex();
+            secIndex = Math.min(Math.max(secIndex, 0), maxIndex);
+
+            track.style.transform = `translateX(-${secIndex * getCardWidth()}px)`;
+
+            if (fill) {
+                fill.style.width = (maxIndex > 0 ? (secIndex / maxIndex) * 100 : 0) + "%";
+            }
+        }
+
+        // ── autoplay ─────────────────────────────────────────────────────
+        // FIX 4: use setTimeout (not setInterval) so each advance waits
+        //        for the CSS transition to finish and respects manual clicks
         function startAuto() {
-            interval = setInterval(() => {
-                index = (index + 1) % cards.length; // LOOP 🔁
+            stopAuto();
+            autoTimer = setTimeout(function tick() {
+                secIndex++;
+                if (secIndex > getMaxIndex()) secIndex = 0; // wrap
                 updateSlider();
-            }, 3000); // 3s (change to 5000 if needed)
+                autoTimer = setTimeout(tick, 4000);
+            }, 4000);
         }
 
         function stopAuto() {
-            clearInterval(interval);
+            clearTimeout(autoTimer);
+            autoTimer = null;
         }
 
         startAuto();
 
-        // ✅ NEXT BUTTON
-        next.addEventListener("click", () => {
-            index = (index + 1) % cards.length; // loop
-            updateSlider();
+        // ── next / prev ──────────────────────────────────────────────────
+        nextBtn?.addEventListener("click", () => {
+            const maxIndex = getMaxIndex();
 
-            stopAuto();
+            if (secIndex >= maxIndex) {
+                secIndex = 0; // 🔥 jump to start
+            } else {
+                secIndex++;
+            }
+
+            updateSlider();
             startAuto();
         });
 
-        // ✅ PREV BUTTON
-        prev.addEventListener("click", () => {
-            index = (index - 1 + cards.length) % cards.length; // loop reverse
-            updateSlider();
+        prevBtn?.addEventListener("click", () => {
+            const maxIndex = getMaxIndex();
 
-            stopAuto();
+            if (secIndex <= 0) {
+                secIndex = maxIndex; // 🔥 jump to last
+            } else {
+                secIndex--;
+            }
+
+            updateSlider();
             startAuto();
         });
 
-        // 🔥 HOVER PAUSE (premium feel)
+        // ── touch swipe ──────────────────────────────────────────────────
+        let touchStartX = 0;
+
+        track.addEventListener("touchstart", e => {
+            touchStartX = e.touches[0].clientX;
+            stopAuto();
+        });
+
+        track.addEventListener("touchend", e => {
+            const diff = e.changedTouches[0].clientX - touchStartX;
+            if (diff > 50) secIndex--;
+            else if (diff < -50) secIndex++;
+            updateSlider();
+            startAuto();
+        });
+
+        // ── hover pause ──────────────────────────────────────────────────
         sec.addEventListener("mouseenter", stopAuto);
         sec.addEventListener("mouseleave", startAuto);
+
+        // ── recalculate on resize (card widths change at breakpoints) ────
+        window.addEventListener("resize", updateSlider);
     }
 
 
@@ -304,79 +390,119 @@ document.addEventListener("DOMContentLoaded", () => {
     if (media) {
         const track = media.querySelector(".track");
         const cards = media.querySelectorAll(".card");
-        const next = media.querySelector(".next");
-        const prev = media.querySelector(".prev");
+        const nextBtn = media.querySelector(".next");
+        const prevBtn = media.querySelector(".prev");
         const fill = media.querySelector(".fill");
 
-        let index = 0;
-        let interval;
+        // FIX 1: renamed from 'index' — avoids clash with any other 'let index'
+        //        declared in the same DOMContentLoaded scope
+        let secIndex = 0;
+        let autoTimer = null;
 
-        function updateSlider() {
-            const gap = 20;
-            const width = cards[0].offsetWidth + gap;
-
-            track.style.transform = `translateX(-${index * width}px)`;
-
-            const progress = (index / (cards.length - 1)) * 100;
-            fill.style.width = progress + "%";
+        // ── helpers ──────────────────────────────────────────────────────
+        function getCardWidth() {
+            const gap = parseInt(getComputedStyle(track).gap) || 20;
+            return cards[0].offsetWidth + gap;
         }
 
+        function getMaxIndex() {
+            const containerWidth = track.parentElement.offsetWidth;
+            // FIX 2: compute max in one pass — no repeated DOM reads
+            const visibleCards = Math.max(1, Math.floor(containerWidth / getCardWidth()));
+            return Math.max(0, cards.length - visibleCards);
+        }
+
+        function clamp(val) {
+            return Math.min(Math.max(val, 0), getMaxIndex());
+        }
+
+        function updateSlider() {
+            if (!cards.length || !track) return;
+
+            // FIX 3: clamp before reading maxIndex so fill never flashes to 100%
+            const maxIndex = getMaxIndex();
+            secIndex = Math.min(Math.max(secIndex, 0), maxIndex);
+
+            track.style.transform = `translateX(-${secIndex * getCardWidth()}px)`;
+
+            if (fill) {
+                fill.style.width = (maxIndex > 0 ? (secIndex / maxIndex) * 100 : 0) + "%";
+            }
+        }
+
+        // ── autoplay ─────────────────────────────────────────────────────
+        // FIX 4: use setTimeout (not setInterval) so each advance waits
+        //        for the CSS transition to finish and respects manual clicks
         function startAuto() {
-            interval = setInterval(() => {
-                index = (index + 1) % cards.length;
+            stopAuto();
+            autoTimer = setTimeout(function tick() {
+                secIndex++;
+                if (secIndex > getMaxIndex()) secIndex = 0; // wrap
                 updateSlider();
+                autoTimer = setTimeout(tick, 4000);
             }, 4000);
         }
 
         function stopAuto() {
-            clearInterval(interval);
+            clearTimeout(autoTimer);
+            autoTimer = null;
         }
 
         startAuto();
 
-        next.addEventListener("click", () => {
-            index = (index + 1) % cards.length;
+        // ── next / prev ──────────────────────────────────────────────────
+        nextBtn?.addEventListener("click", () => {
+            const maxIndex = getMaxIndex();
+
+            if (secIndex >= maxIndex) {
+                secIndex = 0; // 🔥 jump to start
+            } else {
+                secIndex++;
+            }
+
             updateSlider();
-            stopAuto();
             startAuto();
         });
 
-        prev.addEventListener("click", () => {
-            index = (index - 1 + cards.length) % cards.length;
+        prevBtn?.addEventListener("click", () => {
+            const maxIndex = getMaxIndex();
+
+            if (secIndex <= 0) {
+                secIndex = maxIndex; // 🔥 jump to last
+            } else {
+                secIndex--;
+            }
+
             updateSlider();
-            stopAuto();
             startAuto();
         });
 
-        // swipe
-        let startX = 0;
+        // ── touch swipe ──────────────────────────────────────────────────
+        let touchStartX = 0;
 
         track.addEventListener("touchstart", e => {
-            startX = e.touches[0].clientX;
+            touchStartX = e.touches[0].clientX;
             stopAuto();
         });
 
         track.addEventListener("touchend", e => {
-            let diff = e.changedTouches[0].clientX - startX;
-
-            if (diff > 50) index--;
-            else if (diff < -50) index++;
-
-            index = (index + cards.length) % cards.length;
-
+            const diff = e.changedTouches[0].clientX - touchStartX;
+            if (diff > 50) secIndex--;
+            else if (diff < -50) secIndex++;
             updateSlider();
             startAuto();
         });
 
-        // hover pause
+        // ── hover pause ──────────────────────────────────────────────────
         media.addEventListener("mouseenter", stopAuto);
         media.addEventListener("mouseleave", startAuto);
+
+        // ── recalculate on resize (card widths change at breakpoints) ────
+        window.addEventListener("resize", updateSlider);
     }
 
 
-
-
-    // ====================== SUMMARIES ================================
+    // ================= SUMMARIES ========================
 
     const section = document.querySelector(".summaries");
 
@@ -386,6 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let index = 0;
         const duration = 4000;
+        let timeout;
 
         function reset() {
             items.forEach(item => {
@@ -405,7 +532,6 @@ document.addEventListener("DOMContentLoaded", () => {
             bar.style.transition = "none";
             bar.style.height = "0%";
 
-            // 🔥 force reflow (important)
             bar.offsetHeight;
 
             bar.style.transition = `height ${duration}ms linear`;
@@ -422,137 +548,152 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function autoPlay() {
-            showSlide(index);
-
-            setTimeout(() => {
+            timeout = setTimeout(() => {
                 index = (index + 1) % items.length;
+                showSlide(index);
                 autoPlay();
             }, duration);
         }
 
+        function restartAuto() {
+            clearTimeout(timeout);
+            autoPlay();
+        }
+
+        // 🔥 CLICK FEATURE (MAIN ADD)
+        items.forEach((item, i) => {
+            item.addEventListener("click", () => {
+                index = i;
+                showSlide(index);
+                restartAuto(); // 🔥 reset timer
+            });
+        });
+
+        // START
+        showSlide(index);
         autoPlay();
     }
 
-    // ====================== MOBILE SUMMARIES ==========================
+    // ================ MOBILE SUMMARIES =================
 
-const mobile_summaries = document.querySelector(".mobile-summaries");
+    const mobile_summaries = document.querySelector(".mobile-summaries");
 
-if (mobile_summaries) {
-    const track = mobile_summaries.querySelector(".track");
-    const cards = mobile_summaries.querySelectorAll(".card");
-    const next = mobile_summaries.querySelector(".next");
-    const prev = mobile_summaries.querySelector(".prev");
-    const pauseBtn = mobile_summaries.querySelector(".pause"); // 🔥 add
-    const dotsWrap = mobile_summaries.querySelector(".dots");
+    if (mobile_summaries) {
+        const track = mobile_summaries.querySelector(".track");
+        const cards = mobile_summaries.querySelectorAll(".card");
+        const next = mobile_summaries.querySelector(".next");
+        const prev = mobile_summaries.querySelector(".prev");
+        const pauseBtn = mobile_summaries.querySelector(".pause"); // 🔥 add
+        const dotsWrap = mobile_summaries.querySelector(".dots");
 
-    let index = 0;
-    const duration = 4000;
-    let interval;
-    let isPaused = false; // 🔥 state
+        let index = 0;
+        const duration = 4000;
+        let interval;
+        let isPaused = false; // 🔥 state
 
-    // DOTS
-    cards.forEach((_, i) => {
-        const dot = document.createElement("span");
+        // DOTS
+        cards.forEach((_, i) => {
+            const dot = document.createElement("span");
 
-        const prog = document.createElement("div");
-        prog.classList.add("progress");
+            const prog = document.createElement("div");
+            prog.classList.add("progress");
 
-        dot.appendChild(prog);
+            dot.appendChild(prog);
 
-        if (i === 0) dot.classList.add("active");
+            if (i === 0) dot.classList.add("active");
 
-        dotsWrap.appendChild(dot);
-    });
-
-    const dots = dotsWrap.querySelectorAll("span");
-
-    function updateSlider() {
-        const gap = parseInt(getComputedStyle(track).gap) || 20;
-        const width = cards[0].offsetWidth + gap;
-
-        track.style.transform = `translateX(-${index * width}px)`;
-
-        dots.forEach(d => {
-            d.classList.remove("active");
-            d.querySelector(".progress").style.width = "0%";
+            dotsWrap.appendChild(dot);
         });
 
-        dots[index].classList.add("active");
-    }
+        const dots = dotsWrap.querySelectorAll("span");
 
-    function startProgress() {
-        const activeDot = dots[index].querySelector(".progress");
+        function updateSlider() {
+            const gap = parseInt(getComputedStyle(track).gap) || 20;
+            const width = cards[0].offsetWidth + gap;
 
-        activeDot.style.transition = "none";
-        activeDot.style.width = "0%";
+            track.style.transform = `translateX(-${index * width}px)`;
 
-        setTimeout(() => {
-            activeDot.style.transition = `width ${duration}ms linear`;
-            activeDot.style.width = "100%";
-        }, 50);
-    }
+            dots.forEach(d => {
+                d.classList.remove("active");
+                d.querySelector(".progress").style.width = "0%";
+            });
 
-    function autoPlay() {
-        if (isPaused) return; // 🔥 STOP if paused
+            dots[index].classList.add("active");
+        }
 
-        startProgress();
+        function startProgress() {
+            const activeDot = dots[index].querySelector(".progress");
 
-        interval = setTimeout(() => {
+            activeDot.style.transition = "none";
+            activeDot.style.width = "0%";
+
+            setTimeout(() => {
+                activeDot.style.transition = `width ${duration}ms linear`;
+                activeDot.style.width = "100%";
+            }, 50);
+        }
+
+        function autoPlay() {
+            if (isPaused) return; // 🔥 STOP if paused
+
+            startProgress();
+
+            interval = setTimeout(() => {
+                index = (index + 1) % cards.length;
+                updateSlider();
+                autoPlay();
+            }, duration);
+        }
+
+        function restart() {
+            clearTimeout(interval);
+            if (!isPaused) autoPlay();
+        }
+
+        // NEXT
+        next.onclick = () => {
             index = (index + 1) % cards.length;
             updateSlider();
-            autoPlay();
-        }, duration);
-    }
+            restart();
+        };
 
-    function restart() {
-        clearTimeout(interval);
-        if (!isPaused) autoPlay();
-    }
-
-    // NEXT
-    next.onclick = () => {
-        index = (index + 1) % cards.length;
-        updateSlider();
-        restart();
-    };
-
-    // PREV
-    prev.onclick = () => {
-        index = (index - 1 + cards.length) % cards.length;
-        updateSlider();
-        restart();
-    };
-
-    // 🔥 PAUSE BUTTON
-    pauseBtn?.addEventListener("click", () => {
-        isPaused = !isPaused;
-
-        if (isPaused) {
-            clearTimeout(interval);
-
-            // stop animation instantly
-            const bar = dots[index].querySelector(".progress");
-            const computedWidth = getComputedStyle(bar).width;
-            bar.style.transition = "none";
-            bar.style.width = computedWidth;
-
-            pauseBtn.textContent = "▶"; // play icon
-        } else {
-            pauseBtn.textContent = "||";
-            autoPlay();
-        }
-    });
-
-    // DOT CLICK
-    dots.forEach((dot, i) => {
-        dot.addEventListener("click", () => {
-            index = i;
+        // PREV
+        prev.onclick = () => {
+            index = (index - 1 + cards.length) % cards.length;
             updateSlider();
             restart();
-        });
-    });
+        };
 
-    updateSlider();
-    autoPlay();
-}
+        // 🔥 PAUSE BUTTON
+        pauseBtn?.addEventListener("click", () => {
+            isPaused = !isPaused;
+
+            if (isPaused) {
+                clearTimeout(interval);
+
+                // stop animation instantly
+                const bar = dots[index].querySelector(".progress");
+                const computedWidth = getComputedStyle(bar).width;
+                bar.style.transition = "none";
+                bar.style.width = computedWidth;
+
+                pauseBtn.textContent = "▶"; // play icon
+            } else {
+                pauseBtn.textContent = "||";
+                autoPlay();
+            }
+        });
+
+        // DOT CLICK
+        dots.forEach((dot, i) => {
+            dot.addEventListener("click", () => {
+                index = i;
+                updateSlider();
+                restart();
+            });
+        });
+
+        updateSlider();
+        autoPlay();
+    }
 });

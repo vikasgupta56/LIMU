@@ -142,157 +142,181 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ================= WORK SLIDER =================
-    const workSection = document.querySelector(".work");
+const workSection = document.querySelector(".work");
 
-    if (workSection) {
-        const track = workSection.querySelector(".track");
-        const cards = workSection.querySelectorAll(".card");
-        const nextBtn = workSection.querySelector(".next");
-        const prevBtn = workSection.querySelector(".prev");
-        const fill = workSection.querySelector(".fill");
+if (workSection) {
+    const track = workSection.querySelector(".track");
+    const cards = workSection.querySelectorAll(".card");
+    const nextBtn = workSection.querySelector(".next");
+    const prevBtn = workSection.querySelector(".prev");
+    const fill = workSection.querySelector(".fill");
 
-        let workIndex = 0;
-        let touchStartX = 0;
+    let workIndex = 0;
+    let touchStartX = 0;
 
-        track.addEventListener("touchstart", (e) => {
-            touchStartX = e.touches[0].clientX;
-        }, { passive: true });
+    // ── SWIPE ─────────────────────────────────────
+    track.addEventListener("touchstart", (e) => {
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
 
-        track.addEventListener("touchend", (e) => {
-            const diff = e.changedTouches[0].clientX - touchStartX;
+    track.addEventListener("touchend", (e) => {
+        const diff = e.changedTouches[0].clientX - touchStartX;
 
-            if (diff < -50 && workIndex < getMaxIndex()) {
-                workIndex++;
-            }
-            else if (diff > 50 && workIndex > 0) {
-                workIndex--;
-            }
-
-            updateSlider();
-        });
-
-        // ── helpers ───────────────────────────────────────────────────
-
-        function getCardWidth() {
-            const ref = Array.from(cards).find(c => !c.classList.contains("active")) || cards[0];
-            const gap = parseInt(getComputedStyle(track).gap) || 30;
-            return ref.offsetWidth + gap;
+        if (diff < -50 && workIndex < getMaxIndex()) {
+            workIndex++;
+        }
+        else if (diff > 50 && workIndex > 0) {
+            workIndex--;
         }
 
-        function getMaxIndex() {
-            const cw = getCardWidth();
-            const containerW = track.parentElement.offsetWidth;
-            const visibleCards = Math.max(1, Math.floor(containerW / cw));
-            return Math.max(0, cards.length - visibleCards);
-        }
+        updateSlider();
+    });
 
-        // max px the track can be shifted — last card's right edge to container right edge
-        function getMaxPx() {
-            const last = cards[cards.length - 1];
-            const gap = 40;
+    // ── HELPERS ───────────────────────────────────
 
-            return Math.max(
-                0,
-                (last.offsetLeft + last.offsetWidth + gap) - track.parentElement.offsetWidth
-            );
-        }
-
-        // read current live translateX (works mid-transition too)
-        function getCurrentTranslate() {
-            const t = getComputedStyle(track).transform;
-            if (!t || t === "none") return 0;
-            return -new DOMMatrix(t).m41;
-        }
-
-        // write clamped translateX, return the clamped value
-        function applyTranslate(px) {
-            const clamped = Math.min(Math.max(px, 0), getMaxPx());
-            track.style.transform = `translateX(-${clamped}px)`;
-            return clamped;
-        }
-
-        function syncFill(tx) {
-            if (!fill) return;
-            const maxPx = getMaxPx();
-            fill.style.width = (maxPx > 0 ? Math.min(tx / maxPx, 1) * 100 : 0) + "%";
-        }
-
-        // ── index-based update (next / prev / resize / close) ─────────
-        function updateSlider() {
-            if (!cards.length || !track) return;
-            workIndex = Math.min(Math.max(workIndex, 0), getMaxIndex());
-            const tx = applyTranslate(workIndex * getCardWidth());
-            syncFill(tx);
-        }
-
-        // ── bring expanded card fully into view ───────────────────────
-        // Called AFTER the CSS transition ends (520 ms) so getBoundingClientRect
-        // returns the card's final expanded size, not its mid-animation size.
-        function bringIntoView(card) {
-            const cRect = track.parentElement.getBoundingClientRect();
-            const kRect = card.getBoundingClientRect();
-            const curr = getCurrentTranslate();
-
-            const gap = parseInt(getComputedStyle(track).gap) || 30; // 🔥 ADD
-
-            let target = curr;
-
-            // 👉 RIGHT SIDE (spacing add)
-            if (kRect.right > cRect.right - gap) {
-                target += kRect.right - (cRect.right - gap);
-            }
-
-            // 👉 LEFT SIDE (spacing add)
-            if (kRect.left < cRect.left + gap) {
-                target -= (cRect.left + gap) - kRect.left;
-            }
-
-            const tx = applyTranslate(target);
-            syncFill(tx);
-
-            // sync index
-            let best = 0, bestDist = Infinity;
-            cards.forEach((c, i) => {
-                const d = Math.abs(c.offsetLeft - tx);
-                if (d < bestDist) { bestDist = d; best = i; }
-            });
-            workIndex = Math.min(best, getMaxIndex());
-        }
-
-        // ── next / prev ───────────────────────────────────────────────
-        nextBtn?.addEventListener("click", () => {
-            if (workIndex < getMaxIndex()) { workIndex++; updateSlider(); }
-        });
-
-        prevBtn?.addEventListener("click", () => {
-            if (workIndex > 0) { workIndex--; updateSlider(); }
-        });
-
-        // ── expand / close ────────────────────────────────────────────
-        const T = 520; // CSS transition duration (0.5s) + 20ms buffer
-
-        cards.forEach(card => {
-            card.querySelector(".expand")?.addEventListener("click", () => {
-                cards.forEach(c => c.classList.remove("active"));
-                card.classList.add("active");
-                // wait for expand transition to finish, then shift into view
-                setTimeout(() => bringIntoView(card), T);
-            });
-
-            card.querySelector(".close")?.addEventListener("click", () => {
-                card.classList.remove("active");
-                // wait for collapse transition to finish, then snap to index
-                setTimeout(updateSlider, T);
-            });
-        });
-
-        // ── resize ────────────────────────────────────────────────────
-        let rTimer;
-        window.addEventListener("resize", () => {
-            clearTimeout(rTimer);
-            rTimer = setTimeout(updateSlider, 120);
-        });
+    function getGap() {
+        return parseInt(getComputedStyle(track).gap) || 30;
     }
+
+    function getCardWidth() {
+        const ref = Array.from(cards).find(c => !c.classList.contains("active")) || cards[0];
+        return ref.offsetWidth + getGap();
+    }
+
+    function getMaxIndex() {
+        const cw = getCardWidth();
+        const containerW = track.parentElement.offsetWidth;
+        const visibleCards = Math.max(1, Math.floor(containerW / cw));
+        return Math.max(0, cards.length - visibleCards);
+    }
+
+    function getMaxPx() {
+        const last = cards[cards.length - 1];
+        const extraGap = 40;
+
+        return Math.max(
+            0,
+            (last.offsetLeft + last.offsetWidth + extraGap) - track.parentElement.offsetWidth
+        );
+    }
+
+    function getCurrentTranslate() {
+        const t = getComputedStyle(track).transform;
+        if (!t || t === "none") return 0;
+        return -new DOMMatrix(t).m41;
+    }
+
+    function applyTranslate(px) {
+        const clamped = Math.min(Math.max(px, 0), getMaxPx());
+        track.style.transform = `translateX(-${clamped}px)`;
+        return clamped;
+    }
+
+    // 🔥 PREFILL LOGIC
+    function getInitialFillPercent() {
+        const cardWidth = getCardWidth();
+        const containerW = track.parentElement.offsetWidth;
+
+        const visibleCards = Math.max(1, Math.floor(containerW / cardWidth));
+
+        return (visibleCards / cards.length) * 100;
+    }
+
+    function syncFill(tx) {
+        if (!fill) return;
+
+        const maxPx = getMaxPx();
+
+        const base = getInitialFillPercent();
+        const dynamic = maxPx > 0 ? Math.min(tx / maxPx, 1) * (100 - base) : 0;
+
+        fill.style.width = (base + dynamic) + "%";
+    }
+
+    // ── UPDATE ────────────────────────────────────
+    function updateSlider() {
+        if (!cards.length || !track) return;
+
+        workIndex = Math.min(Math.max(workIndex, 0), getMaxIndex());
+
+        const tx = applyTranslate(workIndex * getCardWidth());
+        syncFill(tx);
+    }
+
+    // ── EXPAND VIEW ───────────────────────────────
+    function bringIntoView(card) {
+        const cRect = track.parentElement.getBoundingClientRect();
+        const kRect = card.getBoundingClientRect();
+        const curr = getCurrentTranslate();
+
+        const gap = getGap();
+
+        let target = curr;
+
+        if (kRect.right > cRect.right - gap) {
+            target += kRect.right - (cRect.right - gap);
+        }
+
+        if (kRect.left < cRect.left + gap) {
+            target -= (cRect.left + gap) - kRect.left;
+        }
+
+        const tx = applyTranslate(target);
+        syncFill(tx);
+
+        let best = 0, bestDist = Infinity;
+        cards.forEach((c, i) => {
+            const d = Math.abs(c.offsetLeft - tx);
+            if (d < bestDist) {
+                bestDist = d;
+                best = i;
+            }
+        });
+
+        workIndex = Math.min(best, getMaxIndex());
+    }
+
+    // ── BUTTONS ───────────────────────────────────
+    nextBtn?.addEventListener("click", () => {
+        if (workIndex < getMaxIndex()) {
+            workIndex++;
+            updateSlider();
+        }
+    });
+
+    prevBtn?.addEventListener("click", () => {
+        if (workIndex > 0) {
+            workIndex--;
+            updateSlider();
+        }
+    });
+
+    // ── EXPAND / CLOSE ────────────────────────────
+    const T = 520;
+
+    cards.forEach(card => {
+        card.querySelector(".expand")?.addEventListener("click", () => {
+            cards.forEach(c => c.classList.remove("active"));
+            card.classList.add("active");
+            setTimeout(() => bringIntoView(card), T);
+        });
+
+        card.querySelector(".close")?.addEventListener("click", () => {
+            card.classList.remove("active");
+            setTimeout(updateSlider, T);
+        });
+    });
+
+    // ── RESIZE ────────────────────────────────────
+    let rTimer;
+    window.addEventListener("resize", () => {
+        clearTimeout(rTimer);
+        rTimer = setTimeout(updateSlider, 120);
+    });
+
+    // INIT
+    updateSlider();
+}
 
 
     // ================= TABS =================

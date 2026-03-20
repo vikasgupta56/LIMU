@@ -541,7 +541,7 @@ WORK
                 display: flex;
                 gap: 20px;
                 transition: transform 0.5s ease;
-                margin-left: 1rem;
+                padding-left: 1rem;
 
                 .card {
                     flex: 0 0 300px;
@@ -602,8 +602,8 @@ WORK
                             right: 15px;
                             background: #fff;
                             border: none;
-                            width: 30px;
-                            height: 30px;
+                            width: 35px;
+                            height: 35px;
                             border-radius: 6px;
                             cursor: pointer;
                         }
@@ -1027,7 +1027,7 @@ MEDIA —
 
             .track {
                 display: flex;
-                gap: 20px;
+                gap: 15px;
                 transition: transform 0.5s ease;
             }
 
@@ -1050,8 +1050,8 @@ MEDIA —
                     border-radius: 10px 0 0 10px;
                 }
 
-                h3 {
-                    font-size: 1.5rem;
+                img {
+                    width: 10rem;
                     margin-bottom: 1rem;
                 }
 
@@ -1063,7 +1063,7 @@ MEDIA —
 
                 a {
                     display: inline-block;
-                    margin-top: 1.5rem;
+                    margin-top: 3rem;
                     color: #22c55e;
                     text-decoration: none;
                     font-size: 0.9rem;
@@ -1933,10 +1933,10 @@ DESKTOP  ≥ 1024px
                     display: flex;
                     gap: 20px;
                     transition: transform 0.5s ease;
-                    margin-left: 10rem;
+                    padding-left: 7rem;
 
                     .card {
-                        flex: 0 0 480px;
+                        flex: 0 0 400px;
                         height: 480px;
                         position: relative;
                         border-radius: 20px;
@@ -1994,8 +1994,8 @@ DESKTOP  ≥ 1024px
                                 right: 15px;
                                 background: #fff;
                                 border: none;
-                                width: 30px;
-                                height: 30px;
+                                width: 35px;
+                                height: 35px;
                                 border-radius: 6px;
                                 cursor: pointer;
                             }
@@ -2078,7 +2078,7 @@ DESKTOP  ≥ 1024px
                         }
 
                         &.active {
-                            flex: 0 0 780px;
+                            flex: 0 0 700px;
                             height: 480px;
 
                             .info {
@@ -2299,7 +2299,7 @@ DESKTOP  ≥ 1024px
 
                 .track {
                     display: flex;
-                    gap: 20px;
+                    gap: 10px;
                     transition: transform 0.5s ease;
                 }
 
@@ -2439,6 +2439,7 @@ DESKTOP  ≥ 1024px
                         align-items: stretch; // 🔥 IMPORTANT
                         opacity: 0.4;
                         transition: 0.3s;
+                        cursor: pointer;
 
                         .progress {
                             width: 2px;

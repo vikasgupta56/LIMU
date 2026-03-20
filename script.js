@@ -152,73 +152,146 @@ document.addEventListener("DOMContentLoaded", () => {
         const fill = workSection.querySelector(".fill");
 
         let workIndex = 0;
+        let touchStartX = 0;
 
-        // FIX 2: read width from a NON-expanded card so an open card never
-        //        pollutes the measurement. We look for the first card that
-        //        does NOT have the "active" class; fall back to cards[0].
+        track.addEventListener("touchstart", (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        track.addEventListener("touchend", (e) => {
+            const diff = e.changedTouches[0].clientX - touchStartX;
+
+            if (diff < -50 && workIndex < getMaxIndex()) {
+                workIndex++;
+            }
+            else if (diff > 50 && workIndex > 0) {
+                workIndex--;
+            }
+
+            updateSlider();
+        });
+
+        // ── helpers ───────────────────────────────────────────────────
+
         function getCardWidth() {
-            const reference = Array.from(cards).find(c => !c.classList.contains("active")) || cards[0];
-            const gap = parseInt(getComputedStyle(track).gap) || 20;
-            return reference.offsetWidth + gap;
+            const ref = Array.from(cards).find(c => !c.classList.contains("active")) || cards[0];
+            const gap = parseInt(getComputedStyle(track).gap) || 30;
+            return ref.offsetWidth + gap;
         }
 
         function getMaxIndex() {
-            const cardWidth = getCardWidth();
-            const containerWidth = track.parentElement.offsetWidth;
-            const visibleCards = Math.max(1, Math.floor(containerWidth / cardWidth));
+            const cw = getCardWidth();
+            const containerW = track.parentElement.offsetWidth;
+            const visibleCards = Math.max(1, Math.floor(containerW / cw));
             return Math.max(0, cards.length - visibleCards);
         }
 
-        function updateSlider() {
-            if (!cards.length || !track) return;
+        // max px the track can be shifted — last card's right edge to container right edge
+        function getMaxPx() {
+            const last = cards[cards.length - 1];
+            const gap = 40;
 
-            const maxIndex = getMaxIndex();
-
-            // clamp workIndex to valid range
-            workIndex = Math.min(Math.max(workIndex, 0), maxIndex);
-
-            const cardWidth = getCardWidth();
-            track.style.transform = `translateX(-${workIndex * cardWidth}px)`;
-
-            if (fill) {
-                fill.style.width = (maxIndex > 0 ? (workIndex / maxIndex) * 100 : 0) + "%";
-            }
+            return Math.max(
+                0,
+                (last.offsetLeft + last.offsetWidth + gap) - track.parentElement.offsetWidth
+            );
         }
 
-        // FIX 1: guard against the real upper limit (maxIndex), NOT cards.length - 1
-        nextBtn?.addEventListener("click", () => {
-            if (workIndex < getMaxIndex()) {
-                workIndex++;
-                updateSlider();
+        // read current live translateX (works mid-transition too)
+        function getCurrentTranslate() {
+            const t = getComputedStyle(track).transform;
+            if (!t || t === "none") return 0;
+            return -new DOMMatrix(t).m41;
+        }
+
+        // write clamped translateX, return the clamped value
+        function applyTranslate(px) {
+            const clamped = Math.min(Math.max(px, 0), getMaxPx());
+            track.style.transform = `translateX(-${clamped}px)`;
+            return clamped;
+        }
+
+        function syncFill(tx) {
+            if (!fill) return;
+            const maxPx = getMaxPx();
+            fill.style.width = (maxPx > 0 ? Math.min(tx / maxPx, 1) * 100 : 0) + "%";
+        }
+
+        // ── index-based update (next / prev / resize / close) ─────────
+        function updateSlider() {
+            if (!cards.length || !track) return;
+            workIndex = Math.min(Math.max(workIndex, 0), getMaxIndex());
+            const tx = applyTranslate(workIndex * getCardWidth());
+            syncFill(tx);
+        }
+
+        // ── bring expanded card fully into view ───────────────────────
+        // Called AFTER the CSS transition ends (520 ms) so getBoundingClientRect
+        // returns the card's final expanded size, not its mid-animation size.
+        function bringIntoView(card) {
+            const cRect = track.parentElement.getBoundingClientRect();
+            const kRect = card.getBoundingClientRect();
+            const curr = getCurrentTranslate();
+
+            const gap = parseInt(getComputedStyle(track).gap) || 30; // 🔥 ADD
+
+            let target = curr;
+
+            // 👉 RIGHT SIDE (spacing add)
+            if (kRect.right > cRect.right - gap) {
+                target += kRect.right - (cRect.right - gap);
             }
+
+            // 👉 LEFT SIDE (spacing add)
+            if (kRect.left < cRect.left + gap) {
+                target -= (cRect.left + gap) - kRect.left;
+            }
+
+            const tx = applyTranslate(target);
+            syncFill(tx);
+
+            // sync index
+            let best = 0, bestDist = Infinity;
+            cards.forEach((c, i) => {
+                const d = Math.abs(c.offsetLeft - tx);
+                if (d < bestDist) { bestDist = d; best = i; }
+            });
+            workIndex = Math.min(best, getMaxIndex());
+        }
+
+        // ── next / prev ───────────────────────────────────────────────
+        nextBtn?.addEventListener("click", () => {
+            if (workIndex < getMaxIndex()) { workIndex++; updateSlider(); }
         });
 
         prevBtn?.addEventListener("click", () => {
-            if (workIndex > 0) {
-                workIndex--;
-                updateSlider();
-            }
+            if (workIndex > 0) { workIndex--; updateSlider(); }
         });
 
-        // ── Expand / Close cards ─────────────────────────────────────────
+        // ── expand / close ────────────────────────────────────────────
+        const T = 520; // CSS transition duration (0.5s) + 20ms buffer
+
         cards.forEach(card => {
             card.querySelector(".expand")?.addEventListener("click", () => {
                 cards.forEach(c => c.classList.remove("active"));
                 card.classList.add("active");
-                // FIX 2 continued: recalculate after expand because the active
-                //                  card's size has changed
-                updateSlider();
+                // wait for expand transition to finish, then shift into view
+                setTimeout(() => bringIntoView(card), T);
             });
 
             card.querySelector(".close")?.addEventListener("click", () => {
                 card.classList.remove("active");
-                // Recalculate after collapse too
-                updateSlider();
+                // wait for collapse transition to finish, then snap to index
+                setTimeout(updateSlider, T);
             });
         });
 
-        // FIX 3: recalculate on resize so visibleCards stays accurate
-        window.addEventListener("resize", updateSlider);
+        // ── resize ────────────────────────────────────────────────────
+        let rTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(rTimer);
+            rTimer = setTimeout(updateSlider, 120);
+        });
     }
 
 
@@ -274,50 +347,72 @@ document.addEventListener("DOMContentLoaded", () => {
         const prevBtn = sec.querySelector(".prev");
         const fill = sec.querySelector(".fill");
 
-        // FIX 1: renamed from 'index' — avoids clash with any other 'let index'
-        //        declared in the same DOMContentLoaded scope
         let secIndex = 0;
         let autoTimer = null;
+        let touchStartX = 0;
 
-        // ── helpers ──────────────────────────────────────────────────────
+        // ── helpers ─────────────────────────────────────
+
+        function getGap() {
+            return parseInt(getComputedStyle(track).gap) || 20;
+        }
+
         function getCardWidth() {
-            const gap = parseInt(getComputedStyle(track).gap) || 20;
-            return cards[0].offsetWidth + gap;
+            return cards[0].offsetWidth + getGap();
         }
 
+        function getMaxPx() {
+            const last = cards[cards.length - 1];
+            return Math.max(
+                0,
+                (last.offsetLeft + last.offsetWidth) - track.parentElement.offsetWidth
+            );
+        }
+
+        // 🔥 FIXED maxIndex (cardWidth based)
         function getMaxIndex() {
-            const containerWidth = track.parentElement.offsetWidth;
-            // FIX 2: compute max in one pass — no repeated DOM reads
-            const visibleCards = Math.max(1, Math.floor(containerWidth / getCardWidth()));
-            return Math.max(0, cards.length - visibleCards);
+            const cardWidth = getCardWidth();
+            const maxPx = getMaxPx();
+            return Math.ceil(maxPx / cardWidth);
         }
 
-        function clamp(val) {
-            return Math.min(Math.max(val, 0), getMaxIndex());
+        function applyTranslate(px) {
+            const clamped = Math.min(Math.max(px, 0), getMaxPx());
+            track.style.transform = `translateX(-${clamped}px)`;
+            return clamped;
         }
+
+        function syncFill(tx) {
+            if (!fill) return;
+            const maxPx = getMaxPx();
+            fill.style.width = (maxPx > 0 ? (tx / maxPx) * 100 : 0) + "%";
+        }
+
+        // ── main update ─────────────────────────────────
 
         function updateSlider() {
             if (!cards.length || !track) return;
 
-            // FIX 3: clamp before reading maxIndex so fill never flashes to 100%
-            const maxIndex = getMaxIndex();
-            secIndex = Math.min(Math.max(secIndex, 0), maxIndex);
+            secIndex = Math.min(Math.max(secIndex, 0), getMaxIndex());
 
-            track.style.transform = `translateX(-${secIndex * getCardWidth()}px)`;
+            const cardWidth = getCardWidth();
+            let target = secIndex * cardWidth;
 
-            if (fill) {
-                fill.style.width = (maxIndex > 0 ? (secIndex / maxIndex) * 100 : 0) + "%";
+            // 🔥 no blank space
+            if (target > getMaxPx()) {
+                target = getMaxPx();
             }
+
+            const tx = applyTranslate(target);
+            syncFill(tx);
         }
 
-        // ── autoplay ─────────────────────────────────────────────────────
-        // FIX 4: use setTimeout (not setInterval) so each advance waits
-        //        for the CSS transition to finish and respects manual clicks
+        // ── autoplay ───────────────────────────────────
+
         function startAuto() {
             stopAuto();
             autoTimer = setTimeout(function tick() {
-                secIndex++;
-                if (secIndex > getMaxIndex()) secIndex = 0; // wrap
+                secIndex = secIndex >= getMaxIndex() ? 0 : secIndex + 1;
                 updateSlider();
                 autoTimer = setTimeout(tick, 4000);
             }, 4000);
@@ -330,55 +425,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
         startAuto();
 
-        // ── next / prev ──────────────────────────────────────────────────
+        // ── buttons ────────────────────────────────────
+
         nextBtn?.addEventListener("click", () => {
-            const maxIndex = getMaxIndex();
-
-            if (secIndex >= maxIndex) {
-                secIndex = 0; // 🔥 jump to start
-            } else {
-                secIndex++;
-            }
-
+            secIndex = secIndex >= getMaxIndex() ? 0 : secIndex + 1;
             updateSlider();
             startAuto();
         });
 
         prevBtn?.addEventListener("click", () => {
-            const maxIndex = getMaxIndex();
+            secIndex = secIndex <= 0 ? getMaxIndex() : secIndex - 1;
+            updateSlider();
+            startAuto();
+        });
 
-            if (secIndex <= 0) {
-                secIndex = maxIndex; // 🔥 jump to last
-            } else {
-                secIndex--;
+        // ── swipe ─────────────────────────────────────
+
+        track.addEventListener("touchstart", e => {
+            touchStartX = e.touches[0].clientX;
+            stopAuto();
+        }, { passive: true });
+
+        track.addEventListener("touchend", e => {
+            const diff = e.changedTouches[0].clientX - touchStartX;
+
+            if (diff < -50) {
+                secIndex = secIndex >= getMaxIndex() ? 0 : secIndex + 1;
+            } else if (diff > 50) {
+                secIndex = secIndex <= 0 ? getMaxIndex() : secIndex - 1;
             }
 
             updateSlider();
             startAuto();
         });
 
-        // ── touch swipe ──────────────────────────────────────────────────
-        let touchStartX = 0;
+        // ── hover pause ───────────────────────────────
 
-        track.addEventListener("touchstart", e => {
-            touchStartX = e.touches[0].clientX;
-            stopAuto();
-        });
-
-        track.addEventListener("touchend", e => {
-            const diff = e.changedTouches[0].clientX - touchStartX;
-            if (diff > 50) secIndex--;
-            else if (diff < -50) secIndex++;
-            updateSlider();
-            startAuto();
-        });
-
-        // ── hover pause ──────────────────────────────────────────────────
         sec.addEventListener("mouseenter", stopAuto);
         sec.addEventListener("mouseleave", startAuto);
 
-        // ── recalculate on resize (card widths change at breakpoints) ────
-        window.addEventListener("resize", updateSlider);
+        // ── resize fix ────────────────────────────────
+
+        let rTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(rTimer);
+            rTimer = setTimeout(updateSlider, 120);
+        });
+
+        // init
+        updateSlider();
     }
 
 
@@ -394,50 +489,72 @@ document.addEventListener("DOMContentLoaded", () => {
         const prevBtn = media.querySelector(".prev");
         const fill = media.querySelector(".fill");
 
-        // FIX 1: renamed from 'index' — avoids clash with any other 'let index'
-        //        declared in the same DOMContentLoaded scope
         let secIndex = 0;
         let autoTimer = null;
+        let touchStartX = 0;
 
-        // ── helpers ──────────────────────────────────────────────────────
+        // ── helpers ─────────────────────────────────────
+
+        function getGap() {
+            return parseInt(getComputedStyle(track).gap) || 20;
+        }
+
         function getCardWidth() {
-            const gap = parseInt(getComputedStyle(track).gap) || 20;
-            return cards[0].offsetWidth + gap;
+            return cards[0].offsetWidth + getGap();
         }
 
+        function getMaxPx() {
+            const last = cards[cards.length - 1];
+            return Math.max(
+                0,
+                (last.offsetLeft + last.offsetWidth) - track.parentElement.offsetWidth
+            );
+        }
+
+        // 🔥 FIXED maxIndex (cardWidth based)
         function getMaxIndex() {
-            const containerWidth = track.parentElement.offsetWidth;
-            // FIX 2: compute max in one pass — no repeated DOM reads
-            const visibleCards = Math.max(1, Math.floor(containerWidth / getCardWidth()));
-            return Math.max(0, cards.length - visibleCards);
+            const cardWidth = getCardWidth();
+            const maxPx = getMaxPx();
+            return Math.ceil(maxPx / cardWidth);
         }
 
-        function clamp(val) {
-            return Math.min(Math.max(val, 0), getMaxIndex());
+        function applyTranslate(px) {
+            const clamped = Math.min(Math.max(px, 0), getMaxPx());
+            track.style.transform = `translateX(-${clamped}px)`;
+            return clamped;
         }
+
+        function syncFill(tx) {
+            if (!fill) return;
+            const maxPx = getMaxPx();
+            fill.style.width = (maxPx > 0 ? (tx / maxPx) * 100 : 0) + "%";
+        }
+
+        // ── main update ─────────────────────────────────
 
         function updateSlider() {
             if (!cards.length || !track) return;
 
-            // FIX 3: clamp before reading maxIndex so fill never flashes to 100%
-            const maxIndex = getMaxIndex();
-            secIndex = Math.min(Math.max(secIndex, 0), maxIndex);
+            secIndex = Math.min(Math.max(secIndex, 0), getMaxIndex());
 
-            track.style.transform = `translateX(-${secIndex * getCardWidth()}px)`;
+            const cardWidth = getCardWidth();
+            let target = secIndex * cardWidth;
 
-            if (fill) {
-                fill.style.width = (maxIndex > 0 ? (secIndex / maxIndex) * 100 : 0) + "%";
+            // 🔥 no blank space
+            if (target > getMaxPx()) {
+                target = getMaxPx();
             }
+
+            const tx = applyTranslate(target);
+            syncFill(tx);
         }
 
-        // ── autoplay ─────────────────────────────────────────────────────
-        // FIX 4: use setTimeout (not setInterval) so each advance waits
-        //        for the CSS transition to finish and respects manual clicks
+        // ── autoplay ───────────────────────────────────
+
         function startAuto() {
             stopAuto();
             autoTimer = setTimeout(function tick() {
-                secIndex++;
-                if (secIndex > getMaxIndex()) secIndex = 0; // wrap
+                secIndex = secIndex >= getMaxIndex() ? 0 : secIndex + 1;
                 updateSlider();
                 autoTimer = setTimeout(tick, 4000);
             }, 4000);
@@ -450,55 +567,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
         startAuto();
 
-        // ── next / prev ──────────────────────────────────────────────────
+        // ── buttons ────────────────────────────────────
+
         nextBtn?.addEventListener("click", () => {
-            const maxIndex = getMaxIndex();
-
-            if (secIndex >= maxIndex) {
-                secIndex = 0; // 🔥 jump to start
-            } else {
-                secIndex++;
-            }
-
+            secIndex = secIndex >= getMaxIndex() ? 0 : secIndex + 1;
             updateSlider();
             startAuto();
         });
 
         prevBtn?.addEventListener("click", () => {
-            const maxIndex = getMaxIndex();
+            secIndex = secIndex <= 0 ? getMaxIndex() : secIndex - 1;
+            updateSlider();
+            startAuto();
+        });
 
-            if (secIndex <= 0) {
-                secIndex = maxIndex; // 🔥 jump to last
-            } else {
-                secIndex--;
+        // ── swipe ─────────────────────────────────────
+
+        track.addEventListener("touchstart", e => {
+            touchStartX = e.touches[0].clientX;
+            stopAuto();
+        }, { passive: true });
+
+        track.addEventListener("touchend", e => {
+            const diff = e.changedTouches[0].clientX - touchStartX;
+
+            if (diff < -50) {
+                secIndex = secIndex >= getMaxIndex() ? 0 : secIndex + 1;
+            } else if (diff > 50) {
+                secIndex = secIndex <= 0 ? getMaxIndex() : secIndex - 1;
             }
 
             updateSlider();
             startAuto();
         });
 
-        // ── touch swipe ──────────────────────────────────────────────────
-        let touchStartX = 0;
+        // ── hover pause ───────────────────────────────
 
-        track.addEventListener("touchstart", e => {
-            touchStartX = e.touches[0].clientX;
-            stopAuto();
-        });
-
-        track.addEventListener("touchend", e => {
-            const diff = e.changedTouches[0].clientX - touchStartX;
-            if (diff > 50) secIndex--;
-            else if (diff < -50) secIndex++;
-            updateSlider();
-            startAuto();
-        });
-
-        // ── hover pause ──────────────────────────────────────────────────
         media.addEventListener("mouseenter", stopAuto);
         media.addEventListener("mouseleave", startAuto);
 
-        // ── recalculate on resize (card widths change at breakpoints) ────
-        window.addEventListener("resize", updateSlider);
+        // ── resize fix ────────────────────────────────
+
+        let rTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(rTimer);
+            rTimer = setTimeout(updateSlider, 120);
+        });
+
+        // init
+        updateSlider();
     }
 
 

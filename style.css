@@ -473,7 +473,7 @@ WORK
   display: flex;
   gap: 20px;
   transition: transform 0.5s ease;
-  margin-left: 1rem;
+  padding-left: 1rem;
 }
 .work .container .slider .track .card {
   flex: 0 0 300px;
@@ -531,8 +531,8 @@ WORK
   right: 15px;
   background: #fff;
   border: none;
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -872,7 +872,7 @@ MEDIA —
 }
 .media .container .slider .track {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   transition: transform 0.5s ease;
 }
 .media .container .slider .card {
@@ -892,8 +892,8 @@ MEDIA —
   width: 4px;
   border-radius: 10px 0 0 10px;
 }
-.media .container .slider .card h3 {
-  font-size: 1.5rem;
+.media .container .slider .card img {
+  width: 10rem;
   margin-bottom: 1rem;
 }
 .media .container .slider .card p {
@@ -903,7 +903,7 @@ MEDIA —
 }
 .media .container .slider .card a {
   display: inline-block;
-  margin-top: 1.5rem;
+  margin-top: 3rem;
   color: #22c55e;
   text-decoration: none;
   font-size: 0.9rem;
@@ -1620,10 +1620,10 @@ DESKTOP  ≥ 1024px
     display: flex;
     gap: 20px;
     transition: transform 0.5s ease;
-    margin-left: 10rem;
+    padding-left: 7rem;
   }
   .work .container .slider .track .card {
-    flex: 0 0 480px;
+    flex: 0 0 400px;
     height: 480px;
     position: relative;
     border-radius: 20px;
@@ -1678,8 +1678,8 @@ DESKTOP  ≥ 1024px
     right: 15px;
     background: #fff;
     border: none;
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     border-radius: 6px;
     cursor: pointer;
   }
@@ -1750,7 +1750,7 @@ DESKTOP  ≥ 1024px
     text-align: start;
   }
   .work .container .slider .track .card.active {
-    flex: 0 0 780px;
+    flex: 0 0 700px;
     height: 480px;
   }
   .work .container .slider .track .card.active .info {
@@ -1929,7 +1929,7 @@ DESKTOP  ≥ 1024px
   }
   .security .container .slider .track {
     display: flex;
-    gap: 20px;
+    gap: 10px;
     transition: transform 0.5s ease;
   }
   .security .container .slider .card {
@@ -2046,6 +2046,7 @@ DESKTOP  ≥ 1024px
     align-items: stretch;
     opacity: 0.4;
     transition: 0.3s;
+    cursor: pointer;
   }
   .summaries .container .wrapper .right .item .progress {
     width: 2px;

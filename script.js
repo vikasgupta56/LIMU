@@ -142,181 +142,181 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ================= WORK SLIDER =================
-const workSection = document.querySelector(".work");
+    const workSection = document.querySelector(".work");
 
-if (workSection) {
-    const track = workSection.querySelector(".track");
-    const cards = workSection.querySelectorAll(".card");
-    const nextBtn = workSection.querySelector(".next");
-    const prevBtn = workSection.querySelector(".prev");
-    const fill = workSection.querySelector(".fill");
+    if (workSection) {
+        const track = workSection.querySelector(".track");
+        const cards = workSection.querySelectorAll(".card");
+        const nextBtn = workSection.querySelector(".next");
+        const prevBtn = workSection.querySelector(".prev");
+        const fill = workSection.querySelector(".fill");
 
-    let workIndex = 0;
-    let touchStartX = 0;
+        let workIndex = 0;
+        let touchStartX = 0;
 
-    // ── SWIPE ─────────────────────────────────────
-    track.addEventListener("touchstart", (e) => {
-        touchStartX = e.touches[0].clientX;
-    }, { passive: true });
+        // ── SWIPE ─────────────────────────────────────
+        track.addEventListener("touchstart", (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
 
-    track.addEventListener("touchend", (e) => {
-        const diff = e.changedTouches[0].clientX - touchStartX;
+        track.addEventListener("touchend", (e) => {
+            const diff = e.changedTouches[0].clientX - touchStartX;
 
-        if (diff < -50 && workIndex < getMaxIndex()) {
-            workIndex++;
-        }
-        else if (diff > 50 && workIndex > 0) {
-            workIndex--;
-        }
+            if (diff < -50 && workIndex < getMaxIndex()) {
+                workIndex++;
+            }
+            else if (diff > 50 && workIndex > 0) {
+                workIndex--;
+            }
 
-        updateSlider();
-    });
+            updateSlider();
+        });
 
-    // ── HELPERS ───────────────────────────────────
+        // ── HELPERS ───────────────────────────────────
 
-    function getGap() {
-        return parseInt(getComputedStyle(track).gap) || 30;
-    }
-
-    function getCardWidth() {
-        const ref = Array.from(cards).find(c => !c.classList.contains("active")) || cards[0];
-        return ref.offsetWidth + getGap();
-    }
-
-    function getMaxIndex() {
-        const cw = getCardWidth();
-        const containerW = track.parentElement.offsetWidth;
-        const visibleCards = Math.max(1, Math.floor(containerW / cw));
-        return Math.max(0, cards.length - visibleCards);
-    }
-
-    function getMaxPx() {
-        const last = cards[cards.length - 1];
-        const extraGap = 40;
-
-        return Math.max(
-            0,
-            (last.offsetLeft + last.offsetWidth + extraGap) - track.parentElement.offsetWidth
-        );
-    }
-
-    function getCurrentTranslate() {
-        const t = getComputedStyle(track).transform;
-        if (!t || t === "none") return 0;
-        return -new DOMMatrix(t).m41;
-    }
-
-    function applyTranslate(px) {
-        const clamped = Math.min(Math.max(px, 0), getMaxPx());
-        track.style.transform = `translateX(-${clamped}px)`;
-        return clamped;
-    }
-
-    // 🔥 PREFILL LOGIC
-    function getInitialFillPercent() {
-        const cardWidth = getCardWidth();
-        const containerW = track.parentElement.offsetWidth;
-
-        const visibleCards = Math.max(1, Math.floor(containerW / cardWidth));
-
-        return (visibleCards / cards.length) * 100;
-    }
-
-    function syncFill(tx) {
-        if (!fill) return;
-
-        const maxPx = getMaxPx();
-
-        const base = getInitialFillPercent();
-        const dynamic = maxPx > 0 ? Math.min(tx / maxPx, 1) * (100 - base) : 0;
-
-        fill.style.width = (base + dynamic) + "%";
-    }
-
-    // ── UPDATE ────────────────────────────────────
-    function updateSlider() {
-        if (!cards.length || !track) return;
-
-        workIndex = Math.min(Math.max(workIndex, 0), getMaxIndex());
-
-        const tx = applyTranslate(workIndex * getCardWidth());
-        syncFill(tx);
-    }
-
-    // ── EXPAND VIEW ───────────────────────────────
-    function bringIntoView(card) {
-        const cRect = track.parentElement.getBoundingClientRect();
-        const kRect = card.getBoundingClientRect();
-        const curr = getCurrentTranslate();
-
-        const gap = getGap();
-
-        let target = curr;
-
-        if (kRect.right > cRect.right - gap) {
-            target += kRect.right - (cRect.right - gap);
+        function getGap() {
+            return parseInt(getComputedStyle(track).gap) || 30;
         }
 
-        if (kRect.left < cRect.left + gap) {
-            target -= (cRect.left + gap) - kRect.left;
+        function getCardWidth() {
+            const ref = Array.from(cards).find(c => !c.classList.contains("active")) || cards[0];
+            return ref.offsetWidth + getGap();
         }
 
-        const tx = applyTranslate(target);
-        syncFill(tx);
+        function getMaxIndex() {
+            const cw = getCardWidth();
+            const containerW = track.parentElement.offsetWidth;
+            const visibleCards = Math.max(1, Math.floor(containerW / cw));
+            return Math.max(0, cards.length - visibleCards);
+        }
 
-        let best = 0, bestDist = Infinity;
-        cards.forEach((c, i) => {
-            const d = Math.abs(c.offsetLeft - tx);
-            if (d < bestDist) {
-                bestDist = d;
-                best = i;
+        function getMaxPx() {
+            const last = cards[cards.length - 1];
+            const extraGap = 40;
+
+            return Math.max(
+                0,
+                (last.offsetLeft + last.offsetWidth + extraGap) - track.parentElement.offsetWidth
+            );
+        }
+
+        function getCurrentTranslate() {
+            const t = getComputedStyle(track).transform;
+            if (!t || t === "none") return 0;
+            return -new DOMMatrix(t).m41;
+        }
+
+        function applyTranslate(px) {
+            const clamped = Math.min(Math.max(px, 0), getMaxPx());
+            track.style.transform = `translateX(-${clamped}px)`;
+            return clamped;
+        }
+
+        // 🔥 PREFILL LOGIC
+        function getInitialFillPercent() {
+            const cardWidth = getCardWidth();
+            const containerW = track.parentElement.offsetWidth;
+
+            const visibleCards = Math.max(1, Math.floor(containerW / cardWidth));
+
+            return (visibleCards / cards.length) * 100;
+        }
+
+        function syncFill(tx) {
+            if (!fill) return;
+
+            const maxPx = getMaxPx();
+
+            const base = getInitialFillPercent();
+            const dynamic = maxPx > 0 ? Math.min(tx / maxPx, 1) * (100 - base) : 0;
+
+            fill.style.width = (base + dynamic) + "%";
+        }
+
+        // ── UPDATE ────────────────────────────────────
+        function updateSlider() {
+            if (!cards.length || !track) return;
+
+            workIndex = Math.min(Math.max(workIndex, 0), getMaxIndex());
+
+            const tx = applyTranslate(workIndex * getCardWidth());
+            syncFill(tx);
+        }
+
+        // ── EXPAND VIEW ───────────────────────────────
+        function bringIntoView(card) {
+            const cRect = track.parentElement.getBoundingClientRect();
+            const kRect = card.getBoundingClientRect();
+            const curr = getCurrentTranslate();
+
+            const gap = getGap();
+
+            let target = curr;
+
+            if (kRect.right > cRect.right - gap) {
+                target += kRect.right - (cRect.right - gap);
+            }
+
+            if (kRect.left < cRect.left + gap) {
+                target -= (cRect.left + gap) - kRect.left;
+            }
+
+            const tx = applyTranslate(target);
+            syncFill(tx);
+
+            let best = 0, bestDist = Infinity;
+            cards.forEach((c, i) => {
+                const d = Math.abs(c.offsetLeft - tx);
+                if (d < bestDist) {
+                    bestDist = d;
+                    best = i;
+                }
+            });
+
+            workIndex = Math.min(best, getMaxIndex());
+        }
+
+        // ── BUTTONS ───────────────────────────────────
+        nextBtn?.addEventListener("click", () => {
+            if (workIndex < getMaxIndex()) {
+                workIndex++;
+                updateSlider();
             }
         });
 
-        workIndex = Math.min(best, getMaxIndex());
+        prevBtn?.addEventListener("click", () => {
+            if (workIndex > 0) {
+                workIndex--;
+                updateSlider();
+            }
+        });
+
+        // ── EXPAND / CLOSE ────────────────────────────
+        const T = 520;
+
+        cards.forEach(card => {
+            card.querySelector(".expand")?.addEventListener("click", () => {
+                cards.forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+                setTimeout(() => bringIntoView(card), T);
+            });
+
+            card.querySelector(".close")?.addEventListener("click", () => {
+                card.classList.remove("active");
+                setTimeout(updateSlider, T);
+            });
+        });
+
+        // ── RESIZE ────────────────────────────────────
+        let rTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(rTimer);
+            rTimer = setTimeout(updateSlider, 120);
+        });
+
+        // INIT
+        updateSlider();
     }
-
-    // ── BUTTONS ───────────────────────────────────
-    nextBtn?.addEventListener("click", () => {
-        if (workIndex < getMaxIndex()) {
-            workIndex++;
-            updateSlider();
-        }
-    });
-
-    prevBtn?.addEventListener("click", () => {
-        if (workIndex > 0) {
-            workIndex--;
-            updateSlider();
-        }
-    });
-
-    // ── EXPAND / CLOSE ────────────────────────────
-    const T = 520;
-
-    cards.forEach(card => {
-        card.querySelector(".expand")?.addEventListener("click", () => {
-            cards.forEach(c => c.classList.remove("active"));
-            card.classList.add("active");
-            setTimeout(() => bringIntoView(card), T);
-        });
-
-        card.querySelector(".close")?.addEventListener("click", () => {
-            card.classList.remove("active");
-            setTimeout(updateSlider, T);
-        });
-    });
-
-    // ── RESIZE ────────────────────────────────────
-    let rTimer;
-    window.addEventListener("resize", () => {
-        clearTimeout(rTimer);
-        rTimer = setTimeout(updateSlider, 120);
-    });
-
-    // INIT
-    updateSlider();
-}
 
 
     // ================= TABS =================
@@ -375,8 +375,6 @@ if (workSection) {
         let autoTimer = null;
         let touchStartX = 0;
 
-        // ── helpers ─────────────────────────────────────
-
         function getGap() {
             return parseInt(getComputedStyle(track).gap) || 20;
         }
@@ -393,7 +391,6 @@ if (workSection) {
             );
         }
 
-        // 🔥 FIXED maxIndex (cardWidth based)
         function getMaxIndex() {
             const cardWidth = getCardWidth();
             const maxPx = getMaxPx();
@@ -406,13 +403,26 @@ if (workSection) {
             return clamped;
         }
 
-        function syncFill(tx) {
-            if (!fill) return;
-            const maxPx = getMaxPx();
-            fill.style.width = (maxPx > 0 ? (tx / maxPx) * 100 : 0) + "%";
+        // 🔥 PREFILL LOGIC
+        function getInitialFillPercent() {
+            const cardWidth = getCardWidth();
+            const containerW = track.parentElement.offsetWidth;
+
+            const visibleCards = Math.max(1, Math.floor(containerW / cardWidth));
+
+            return (visibleCards / cards.length) * 100;
         }
 
-        // ── main update ─────────────────────────────────
+        function syncFill(tx) {
+            if (!fill) return;
+
+            const maxPx = getMaxPx();
+
+            const base = getInitialFillPercent(); // 🔥 initial fill
+            const dynamic = maxPx > 0 ? Math.min(tx / maxPx, 1) * (100 - base) : 0;
+
+            fill.style.width = (base + dynamic) + "%";
+        }
 
         function updateSlider() {
             if (!cards.length || !track) return;
@@ -422,7 +432,6 @@ if (workSection) {
             const cardWidth = getCardWidth();
             let target = secIndex * cardWidth;
 
-            // 🔥 no blank space
             if (target > getMaxPx()) {
                 target = getMaxPx();
             }
@@ -430,8 +439,6 @@ if (workSection) {
             const tx = applyTranslate(target);
             syncFill(tx);
         }
-
-        // ── autoplay ───────────────────────────────────
 
         function startAuto() {
             stopAuto();
@@ -449,8 +456,6 @@ if (workSection) {
 
         startAuto();
 
-        // ── buttons ────────────────────────────────────
-
         nextBtn?.addEventListener("click", () => {
             secIndex = secIndex >= getMaxIndex() ? 0 : secIndex + 1;
             updateSlider();
@@ -462,8 +467,6 @@ if (workSection) {
             updateSlider();
             startAuto();
         });
-
-        // ── swipe ─────────────────────────────────────
 
         track.addEventListener("touchstart", e => {
             touchStartX = e.touches[0].clientX;
@@ -483,12 +486,8 @@ if (workSection) {
             startAuto();
         });
 
-        // ── hover pause ───────────────────────────────
-
         sec.addEventListener("mouseenter", stopAuto);
         sec.addEventListener("mouseleave", startAuto);
-
-        // ── resize fix ────────────────────────────────
 
         let rTimer;
         window.addEventListener("resize", () => {
@@ -496,7 +495,6 @@ if (workSection) {
             rTimer = setTimeout(updateSlider, 120);
         });
 
-        // init
         updateSlider();
     }
 
@@ -535,7 +533,6 @@ if (workSection) {
             );
         }
 
-        // 🔥 FIXED maxIndex (cardWidth based)
         function getMaxIndex() {
             const cardWidth = getCardWidth();
             const maxPx = getMaxPx();
@@ -548,10 +545,25 @@ if (workSection) {
             return clamped;
         }
 
+        // 🔥 PREFILL LOGIC
+        function getInitialFillPercent() {
+            const cardWidth = getCardWidth();
+            const containerW = track.parentElement.offsetWidth;
+
+            const visibleCards = Math.max(1, Math.floor(containerW / cardWidth));
+
+            return (visibleCards / cards.length) * 100;
+        }
+
         function syncFill(tx) {
             if (!fill) return;
+
             const maxPx = getMaxPx();
-            fill.style.width = (maxPx > 0 ? (tx / maxPx) * 100 : 0) + "%";
+
+            const base = getInitialFillPercent(); // 🔥 initial fill
+            const dynamic = maxPx > 0 ? Math.min(tx / maxPx, 1) * (100 - base) : 0;
+
+            fill.style.width = (base + dynamic) + "%";
         }
 
         // ── main update ─────────────────────────────────
@@ -564,7 +576,6 @@ if (workSection) {
             const cardWidth = getCardWidth();
             let target = secIndex * cardWidth;
 
-            // 🔥 no blank space
             if (target > getMaxPx()) {
                 target = getMaxPx();
             }
@@ -630,7 +641,7 @@ if (workSection) {
         media.addEventListener("mouseenter", stopAuto);
         media.addEventListener("mouseleave", startAuto);
 
-        // ── resize fix ────────────────────────────────
+        // ── resize ────────────────────────────────
 
         let rTimer;
         window.addEventListener("resize", () => {

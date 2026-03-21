@@ -1,0 +1,591 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: "Jokker";
+    src: url("assets/Fonts/Jokker-Regular.woff2") format("woff2");
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Jokker";
+    src: url("assets/Fonts/Jokker-Semibold.woff2") format("woff2");
+    font-weight: 600;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    font-family: "Jokker", sans-serif;
+    overflow-x: hidden;
+}
+
+
+// ═══════════════════════════════════════════════
+// TOKENS
+// ═══════════════════════════════════════════════
+:root {
+    --c-bg: #ffffff;
+    --c-wrap: #f0efeb; // warm grey outer card
+    --c-white: #ffffff;
+    --c-text: #111111;
+    --c-sub: #6b6b6b;
+    --c-row: #ebebeb; // row divider
+    --c-col: #e2e2e2; // column divider (slightly stronger)
+    --c-green: #3ecf6e;
+    --c-blue: #00ccff;
+    --c-purple: #a855f7;
+    --r-outer: 16px;
+    --r-card: 12px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-family: var(--font);
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background: var(--c-bg);
+    color: var(--c-text);
+    line-height: 1.5;
+}
+
+// ═══════════════════════════════════════════════
+// BADGES
+// ═══════════════════════════════════════════════
+.badge {
+    display: inline-block;
+    padding: .3rem .9rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &--green {
+        background: var(--c-green);
+        color: #fff;
+    }
+
+    &--blue {
+        background: var(--c-blue);
+        color: #000;
+    }
+
+    &--purple {
+        background: var(--c-purple);
+        color: #fff;
+    }
+}
+
+.beta {
+    font-size: .62rem;
+    color: var(--c-sub);
+    vertical-align: super;
+    margin-left: 1px;
+    font-weight: 400;
+}
+
+// ═══════════════════════════════════════════════
+// CHECKMARK SVGs
+// ═══════════════════════════════════════════════
+.chk {
+    display: inline-block;
+    width: 16px;
+    height: 12px;
+    vertical-align: middle;
+
+    &--green {
+        stroke: var(--c-green);
+    }
+
+    &--blue {
+        stroke: var(--c-blue);
+    }
+
+    &--purple {
+        stroke: var(--c-purple);
+    }
+}
+
+// ═══════════════════════════════════════════════
+// SECTION  — mobile-first
+// ═══════════════════════════════════════════════
+.ps {
+    padding: 2.25rem 1rem 1.5rem;
+
+    // ── Header ─────────────────────────────────
+    &__head {
+        text-align: center;
+        margin-bottom: 1.75rem;
+    }
+
+    &__title {
+        font-size: clamp(1.5rem, 4vw, 2.4rem);
+        font-weight: 400;
+        letter-spacing: -.02em;
+        line-height: 1.2;
+        margin-bottom: .6rem;
+    }
+
+    &__sub {
+        font-size: clamp(.85rem, 2vw, 1rem);
+        color: var(--c-sub);
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+
+        strong {
+            color: var(--c-text);
+            font-weight: 600;
+        }
+    }
+
+    // ── Big grey wrap card ──────────────────────
+    &__wrap {
+        background: var(--c-wrap);
+        border-radius: var(--r-outer);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column; // stacked on mobile
+        gap: 1rem;
+    }
+
+    // ── Left panel ──────────────────────────────
+    &__left {
+        display: flex;
+        flex-direction: column;
+        gap: .875rem;
+    }
+
+    // ── Right panel ─────────────────────────────
+    &__right {
+        background: var(--c-white);
+        border-radius: var(--r-card);
+        overflow: hidden;
+    }
+
+    &__disclaimer {
+        margin-top: .875rem;
+        font-size: .72rem;
+        color: var(--c-sub);
+        line-height: 1.5;
+    }
+}
+
+// ═══════════════════════════════════════════════
+// LEFT — Hero card
+// ═══════════════════════════════════════════════
+.ps-hero {
+    background: var(--c-white);
+    border-radius: var(--r-card);
+    padding: 1.25rem 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 160px;
+
+    &__copy {
+        display: flex;
+        flex-direction: column;
+        gap: .3rem;
+    }
+
+    &__mins {
+        display: flex;
+        align-items: baseline;
+        gap: .15rem;
+        margin-top: .25rem;
+    }
+
+    &__num {
+        font-size: 3.2rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -.02em;
+    }
+
+    &__unit {
+        font-size: 1.15rem;
+        font-weight: 400;
+    }
+
+    &__label {
+        font-size: .75rem;
+        color: var(--c-sub);
+        line-height: 1.45;
+        margin-top: .1rem;
+    }
+
+    &__device {
+        flex-shrink: 0;
+        width: 80px;
+
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════
+// LEFT — In the box card
+// ═══════════════════════════════════════════════
+.ps-box {
+    background: var(--c-white);
+    border-radius: var(--r-card);
+    padding: 1.1rem;
+
+    &__title {
+        font-size: .9rem;
+        font-weight: 400;
+        margin-bottom: .875rem;
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: .4rem;
+    }
+
+    &__item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .35rem;
+        text-align: center;
+    }
+
+    &__img {
+        width: 100%;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            display: block;
+            width: 72%;
+            height: auto;
+        }
+    }
+
+    &__item span {
+        font-size: .6rem;
+        color: var(--c-sub);
+        line-height: 1.3;
+    }
+}
+
+// ═══════════════════════════════════════════════
+// RIGHT — Comparison table
+// ═══════════════════════════════════════════════
+.ps-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pt {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: .8rem;
+
+    // ── THEAD ────────────────────────────────────
+    &__head-row {
+        border-bottom: 1px solid var(--c-row);
+
+        th {
+            padding: .95rem .5rem .85rem;
+            text-align: center;
+            font-weight: 400;
+        }
+    }
+
+    &__feat-th {
+        width: 36%;
+        text-align: left !important;
+    }
+
+    &__plan-th {
+        width: 21.3%;
+    }
+
+    // ── Column separators (left border on each plan col) ──
+    &__col--1,
+    &__col--2,
+    &__col--3 {
+        border-left: 2px solid var(--c-col);
+    }
+
+
+
+    // ── TBODY rows ──────────────────────────────
+    &__row {
+        border-bottom: 1px solid var(--c-row);
+
+        &--last {
+            border-bottom: none;
+        }
+
+        &:hover td {
+            background: #fafafa;
+        }
+    }
+
+    &__feat {
+        padding: .58rem .5rem .58rem 1rem;
+        text-align: left;
+        vertical-align: middle;
+        font-weight: 400;
+        line-height: 1.4;
+        color: var(--c-text);
+    }
+
+    &__val {
+        padding: .58rem .4rem;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 1.4;
+
+        strong {
+            display: block;
+            font-size: .83rem;
+            font-weight: 600;
+        }
+
+        small {
+            display: block;
+            font-size: .66rem;
+            color: var(--c-sub);
+            margin-top: 1px;
+        }
+
+        &--xs {
+            font-size: .69rem;
+            color: var(--c-sub);
+            line-height: 1.45;
+        }
+    }
+
+    // Free label
+    &__free {
+        color: var(--c-green) !important;
+    }
+}
+
+// ═══════════════════════════════════════════════
+// MOBILE plan tabs  (injected by JS)
+// ═══════════════════════════════════════════════
+.ps-tabs {
+    display: flex;
+    justify-content: center;
+    gap: .4rem;
+    padding: .75rem 1rem .6rem;
+    border-bottom: 1px solid var(--c-row);
+}
+
+.ps-tab {
+    padding: .3rem .9rem;
+    border-radius: 999px;
+    border: 1.5px solid #ddd;
+    background: #fff;
+    font-family: var(--font);
+    font-size: .78rem;
+    cursor: pointer;
+    color: var(--c-sub);
+    transition: background .18s, color .18s, border-color .18s;
+
+    &--active {
+        background: var(--c-text);
+        color: #fff;
+        border-color: var(--c-text);
+    }
+}
+
+// Hide non-selected plan cols below 1024px
+@media (max-width: 1023px) {
+    .pt-col-hidden {
+        display: none;
+    }
+
+    .pt {
+        min-width: unset;
+
+        &__feat-th {
+            width: 52%;
+        }
+
+        &__plan-th {
+            width: 48%;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════
+// TABLET  ≥ 640px
+// ═══════════════════════════════════════════════
+@media (min-width: 640px) {
+    .ps {
+        padding: 3rem 1.5rem 2rem;
+
+        &__wrap {
+            padding: 1.25rem;
+        }
+    }
+
+    .ps-hero {
+        min-height: 190px;
+
+        &__num {
+            font-size: 3.8rem;
+        }
+
+        &__device {
+            width: 100px;
+        }
+    }
+
+    .pt {
+        font-size: .83rem;
+    }
+
+    .pt__feat {
+        padding: .65rem .5rem .65rem 1.1rem;
+    }
+
+    .pt__val {
+        padding: .65rem .5rem;
+    }
+}
+
+// ═══════════════════════════════════════════════
+// DESKTOP  ≥ 1024px
+// ═══════════════════════════════════════════════
+@media (min-width: 1024px) {
+    .ps {
+        padding: 3.5rem 2rem 2rem;
+
+        &__wrap {
+            flex-direction: row; // side-by-side
+            padding: 1.5rem;
+            align-items: stretch;
+            gap: 1.25rem;
+        }
+
+        &__left {
+            flex: 0 0 300px;
+            width: 300px;
+        }
+
+        &__right {
+            flex: 1;
+            min-width: 0;
+        }
+    }
+
+    .ps-hero {
+        min-height: 230px;
+
+        &__num {
+            font-size: 4.2rem;
+        }
+
+        &__device {
+            width: 112px;
+        }
+    }
+
+    .ps-tabs {
+        display: none;
+    }
+
+    // hide tabs on desktop
+
+    .pt-col-hidden {
+        display: table-cell;
+    }
+
+    // show all columns
+
+    .pt {
+        min-width: unset;
+        font-size: .84rem;
+
+        &__feat-th {
+            width: 36%;
+        }
+
+        &__plan-th {
+            width: 21.3%;
+        }
+
+        &__feat {
+            padding: .65rem .5rem .65rem 1.2rem;
+        }
+
+        &__val {
+            padding: .65rem .5rem;
+        }
+    }
+
+    .ps-table-wrap {
+        overflow-x: visible;
+    }
+}
+
+// ═══════════════════════════════════════════════
+// WIDE  ≥ 1280px
+// ═══════════════════════════════════════════════
+@media (min-width: 1280px) {
+    .ps {
+        padding: 4rem 2.5rem 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+
+        &__left {
+            flex: 0 0 340px;
+            width: 340px;
+        }
+    }
+
+    .ps-hero {
+        &__num {
+            font-size: 4.8rem;
+        }
+
+        &__device {
+            width: 125px;
+        }
+    }
+
+    .pt {
+        font-size: .875rem;
+
+        &__feat {
+            padding: .72rem .5rem .72rem 1.4rem;
+        }
+
+        &__val {
+            padding: .72rem .6rem;
+        }
+    }
+}
